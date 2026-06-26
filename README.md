@@ -92,7 +92,7 @@ patching is used. In the future the Mono.Cecil may be replaced with a different 
 
 There is an [AGENTS.md](AGENTS.md) file in this repository. Make sure your coding agent reads this file before working on the code.
 
-Please consider using [se2-dev-skills](https://github.com/viktor-ferenczi/se2-dev-skills/) for better outcomes.
+Please consider using [se2-dev-skills](https://github.com/CometWorks/skills2/) for better outcomes.
 
 ### Troubleshooting
 
