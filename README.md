@@ -55,12 +55,13 @@ paths. `setup.py` writes that file for you with the auto-detected install locati
 it if needed and keeping any other overrides already in it.
 
 Leaving a path empty (or having no `Directory.Build.props.user` at all) falls back to the
-platform-specific auto-detection in `ClientPlugin.csproj`, which looks for the Steam install
-of the game (registry on Windows, the usual `~/.steam`, `~/.local/share/Steam` and Flatpak
-locations on Linux) and for Pulsar under `%AppData%\Pulsar` or `~/.config/Pulsar`.
+platform defaults declared after that import: the Steam install of the game (from the
+registry on Windows, under `~/.steam/steam` on Linux) and Pulsar under `%AppData%\Pulsar`
+or `$XDG_CONFIG_HOME`/`~/.config/Pulsar`. If your Steam library lives elsewhere, run
+`setup.py` or set the path yourself; the defaults are not searched for.
 
-A pre-build step verifies that `Game2` points at an existing folder, so a wrong or missing
-path fails the build with a clear message instead of a wall of unresolved references.
+A `Verify` target checks these paths before the build, so a wrong or missing one fails with
+a clear message instead of a wall of unresolved references.
 
 ### Debugging
 

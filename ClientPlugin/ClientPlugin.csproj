@@ -6,45 +6,6 @@
         <Nullable>disable</Nullable>
         <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
         <LangVersion>latestmajor</LangVersion>
-
-        <!-- Ensure SDK generates assembly attributes (no need for AssemblyInfo) -->
-        <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-
-        <!-- Default versions; overridden by Version.Build.props -->
-        <AssemblyVersion>1.0.0.0</AssemblyVersion>
-        <FileVersion>1.0.0.0</FileVersion>
-
-        <PathSeparator Condition="$([MSBuild]::IsOSPlatform('Windows'))">\</PathSeparator>
-        <PathSeparator Condition="!$([MSBuild]::IsOSPlatform('Windows'))">/</PathSeparator>
-    </PropertyGroup>
-
-    <!-- Auto-detect Game2 by platform when not explicitly set in Directory.Build.props[.user] -->
-    <PropertyGroup>
-        <!-- Windows: Steam App registry key -->
-        <_SteamAppInstallLocation Condition=" '$(Game2)' == '' AND $([MSBuild]::IsOSPlatform('Windows')) ">$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 1133870@InstallLocation)</_SteamAppInstallLocation>
-        <Game2 Condition=" '$(Game2)' == '' AND '$(_SteamAppInstallLocation)' != '' ">$(_SteamAppInstallLocation)\Game2</Game2>
-
-        <!-- Windows: standard Steam install path -->
-        <Game2 Condition=" '$(Game2)' == '' AND $([MSBuild]::IsOSPlatform('Windows')) AND Exists('C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers2\Game2') ">C:\Program Files (x86)\Steam\steamapps\common\SpaceEngineers2\Game2</Game2>
-
-        <!-- Linux: common Steam install locations under the user home -->
-        <_UserHome Condition=" !$([MSBuild]::IsOSPlatform('Windows')) ">$([System.Environment]::GetFolderPath(SpecialFolder.UserProfile))</_UserHome>
-        <Game2 Condition=" '$(Game2)' == '' AND '$(_UserHome)' != '' AND Exists('$(_UserHome)/.steam/steam/steamapps/common/SpaceEngineers2/Game2') ">$(_UserHome)/.steam/steam/steamapps/common/SpaceEngineers2/Game2</Game2>
-        <Game2 Condition=" '$(Game2)' == '' AND '$(_UserHome)' != '' AND Exists('$(_UserHome)/.local/share/Steam/steamapps/common/SpaceEngineers2/Game2') ">$(_UserHome)/.local/share/Steam/steamapps/common/SpaceEngineers2/Game2</Game2>
-        <Game2 Condition=" '$(Game2)' == '' AND '$(_UserHome)' != '' AND Exists('$(_UserHome)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/SpaceEngineers2/Game2') ">$(_UserHome)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/SpaceEngineers2/Game2</Game2>
-
-        <!-- Game2 with a trailing platform-specific separator, so the reference hint paths stay readable -->
-        <Game2Dir>$(Game2)</Game2Dir>
-        <Game2Dir Condition=" '$(Game2Dir)' != '' AND !HasTrailingSlash('$(Game2Dir)') ">$(Game2Dir)$(PathSeparator)</Game2Dir>
-    </PropertyGroup>
-
-    <!-- Auto-detect Pulsar's data folder when not explicitly set in Directory.Build.props[.user] -->
-    <PropertyGroup>
-        <Pulsar Condition=" '$(Pulsar)' == '' AND $([MSBuild]::IsOSPlatform('Windows')) ">$(APPDATA)\Pulsar</Pulsar>
-        <Pulsar Condition=" '$(Pulsar)' == '' AND '$(_UserHome)' != '' ">$(_UserHome)/.config/Pulsar</Pulsar>
-
-        <!-- Local plugin DLL deployment folder -->
-        <LocalDeploymentDir Condition=" '$(LocalDeploymentDir)' == '' ">$(Pulsar)$(PathSeparator)Modern$(PathSeparator)Local</LocalDeploymentDir>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -61,11 +22,10 @@
         <AssemblyName>ClientPluginTemplate</AssemblyName>
     </PropertyGroup>
 
-    <Target Name="VerifyProps" BeforeTargets="BeforeBuild">
-        <Exec Condition="$([MSBuild]::IsOSPlatform('Windows'))"
-              Command="call &quot;$(RepoRoot)verify_props.bat&quot; &quot;$(Game2)&quot;" />
-        <Exec Condition="!$([MSBuild]::IsOSPlatform('Windows'))"
-              Command="sh &quot;$(RepoRoot)verify_props.sh&quot; &quot;$(Game2)&quot;" />
+    <Target Name="Verify" BeforeTargets="PrepareForBuild">
+        <Error Condition="'$(Game2)' == ''" Text="Specify the SpaceEngineers2 Game2 path in Directory.Build.props.user!" />
+        <Error Condition="!Exists('$(Game2)')" Text="SpaceEngineers2 Game2 path not found: $(Game2)" />
+        <Error Condition="'$(Pulsar)' == ''" Text="Specify Pulsar's data folder in Directory.Build.props.user!" />
     </Target>
 
     <Target Name="DeployPlugin" AfterTargets="Build">
@@ -87,7 +47,7 @@
     <PropertyGroup>
       <PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
       <PublicizerRuntimeStrategies>Unsafe;IgnoresAccessChecksTo</PublicizerRuntimeStrategies>
-      <PublicizerLogFilePath>$(MSBuildProjectDirectory)$(PathSeparator)$(OutputPath)Krafs.Publicizer.log</PublicizerLogFilePath>
+      <PublicizerLogFilePath>$(MSBuildProjectDirectory)/$(OutputPath)Krafs.Publicizer.log</PublicizerLogFilePath>
     </PropertyGroup>
     
     <ItemGroup>
@@ -97,76 +57,76 @@
     -->
 
     <ItemGroup>
-      <Reference Include="Avalonia.Base"><HintPath>$(Game2Dir)Avalonia.Base.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Avalonia.Controls"><HintPath>$(Game2Dir)Avalonia.Controls.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Avalonia.Controls.ColorPicker"><HintPath>$(Game2Dir)Avalonia.Controls.ColorPicker.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Avalonia.Markup"><HintPath>$(Game2Dir)Avalonia.Markup.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Avalonia.Markup.Xaml"><HintPath>$(Game2Dir)Avalonia.Markup.Xaml.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Avalonia.Themes.Fluent"><HintPath>$(Game2Dir)Avalonia.Themes.Fluent.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Game2.AutoTests"><HintPath>$(Game2Dir)Game2.AutoTests.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Game2.Client"><HintPath>$(Game2Dir)Game2.Client.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Game2.ContentBuilder"><HintPath>$(Game2Dir)Game2.ContentBuilder.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Game2.Game"><HintPath>$(Game2Dir)Game2.Game.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Game2.Plugin.Editor"><HintPath>$(Game2Dir)Game2.Plugin.Editor.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="Game2.Simulation"><HintPath>$(Game2Dir)Game2.Simulation.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="SpaceEngineers2"><HintPath>$(Game2Dir)SpaceEngineers2.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.AI"><HintPath>$(Game2Dir)VRage.AI.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Analytics"><HintPath>$(Game2Dir)VRage.Analytics.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Animation.Client"><HintPath>$(Game2Dir)VRage.Animation.Client.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Animation"><HintPath>$(Game2Dir)VRage.Animation.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Audio"><HintPath>$(Game2Dir)VRage.Audio.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.AutoTest"><HintPath>$(Game2Dir)VRage.AutoTest.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Client.ContentBuilder"><HintPath>$(Game2Dir)VRage.Client.ContentBuilder.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Client"><HintPath>$(Game2Dir)VRage.Client.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Animations"><HintPath>$(Game2Dir)VRage.ContentPipeline.Animations.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.ArmorBlockModel"><HintPath>$(Game2Dir)VRage.ContentPipeline.ArmorBlockModel.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.ArmorBlockSide"><HintPath>$(Game2Dir)VRage.ContentPipeline.ArmorBlockSide.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Audio"><HintPath>$(Game2Dir)VRage.ContentPipeline.Audio.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Builder.Plugin"><HintPath>$(Game2Dir)VRage.ContentPipeline.Builder.Plugin.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Builder"><HintPath>$(Game2Dir)VRage.ContentPipeline.Builder.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Game"><HintPath>$(Game2Dir)VRage.ContentPipeline.Game.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.ModelVoxels"><HintPath>$(Game2Dir)VRage.ContentPipeline.ModelVoxels.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Models"><HintPath>$(Game2Dir)VRage.ContentPipeline.Models.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.ModelsBase"><HintPath>$(Game2Dir)VRage.ContentPipeline.ModelsBase.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.ModelsValidation"><HintPath>$(Game2Dir)VRage.ContentPipeline.ModelsValidation.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.PlanetTextures"><HintPath>$(Game2Dir)VRage.ContentPipeline.PlanetTextures.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Publishing"><HintPath>$(Game2Dir)VRage.ContentPipeline.Publishing.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Scripting"><HintPath>$(Game2Dir)VRage.ContentPipeline.Scripting.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.SlugFont"><HintPath>$(Game2Dir)VRage.ContentPipeline.SlugFont.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.SlugSVG"><HintPath>$(Game2Dir)VRage.ContentPipeline.SlugSVG.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline.Textures"><HintPath>$(Game2Dir)VRage.ContentPipeline.Textures.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ContentPipeline"><HintPath>$(Game2Dir)VRage.ContentPipeline.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Core.Editor"><HintPath>$(Game2Dir)VRage.Core.Editor.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Core.Game.Editor"><HintPath>$(Game2Dir)VRage.Core.Game.Editor.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Core.Game"><HintPath>$(Game2Dir)VRage.Core.Game.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Core"><HintPath>$(Game2Dir)VRage.Core.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.DCS.Samples"><HintPath>$(Game2Dir)VRage.DCS.Samples.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.DCS"><HintPath>$(Game2Dir)VRage.DCS.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.EOS"><HintPath>$(Game2Dir)VRage.EOS.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Game.Client"><HintPath>$(Game2Dir)VRage.Game.Client.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Game"><HintPath>$(Game2Dir)VRage.Game.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Input"><HintPath>$(Game2Dir)VRage.Input.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Library"><HintPath>$(Game2Dir)VRage.Library.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Mod.Io"><HintPath>$(Game2Dir)VRage.Mod.Io.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Multiplayer"><HintPath>$(Game2Dir)VRage.Multiplayer.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Physics.Client"><HintPath>$(Game2Dir)VRage.Physics.Client.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Physics"><HintPath>$(Game2Dir)VRage.Physics.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Platform.Windows"><HintPath>$(Game2Dir)VRage.Platform.Windows.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Render"><HintPath>$(Game2Dir)VRage.Render.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Render12"><HintPath>$(Game2Dir)VRage.Render12.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Scripting"><HintPath>$(Game2Dir)VRage.Scripting.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.ShaderBuilder"><HintPath>$(Game2Dir)VRage.ShaderBuilder.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Steam"><HintPath>$(Game2Dir)VRage.Steam.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.TestLogger"><HintPath>$(Game2Dir)VRage.TestLogger.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Testing"><HintPath>$(Game2Dir)VRage.Testing.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.UI.Shared"><HintPath>$(Game2Dir)VRage.UI.Shared.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.UI.Tests"><HintPath>$(Game2Dir)VRage.UI.Tests.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.UI"><HintPath>$(Game2Dir)VRage.UI.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Voxels.Client"><HintPath>$(Game2Dir)VRage.Voxels.Client.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Voxels.Editor"><HintPath>$(Game2Dir)VRage.Voxels.Editor.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Voxels"><HintPath>$(Game2Dir)VRage.Voxels.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Water.Client"><HintPath>$(Game2Dir)VRage.Water.Client.dll</HintPath><Private>false</Private></Reference>
-      <Reference Include="VRage.Water"><HintPath>$(Game2Dir)VRage.Water.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Avalonia.Base"><HintPath>$(Game2)/Avalonia.Base.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Avalonia.Controls"><HintPath>$(Game2)/Avalonia.Controls.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Avalonia.Controls.ColorPicker"><HintPath>$(Game2)/Avalonia.Controls.ColorPicker.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Avalonia.Markup"><HintPath>$(Game2)/Avalonia.Markup.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Avalonia.Markup.Xaml"><HintPath>$(Game2)/Avalonia.Markup.Xaml.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Avalonia.Themes.Fluent"><HintPath>$(Game2)/Avalonia.Themes.Fluent.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Game2.AutoTests"><HintPath>$(Game2)/Game2.AutoTests.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Game2.Client"><HintPath>$(Game2)/Game2.Client.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Game2.ContentBuilder"><HintPath>$(Game2)/Game2.ContentBuilder.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Game2.Game"><HintPath>$(Game2)/Game2.Game.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Game2.Plugin.Editor"><HintPath>$(Game2)/Game2.Plugin.Editor.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="Game2.Simulation"><HintPath>$(Game2)/Game2.Simulation.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="SpaceEngineers2"><HintPath>$(Game2)/SpaceEngineers2.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.AI"><HintPath>$(Game2)/VRage.AI.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Analytics"><HintPath>$(Game2)/VRage.Analytics.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Animation.Client"><HintPath>$(Game2)/VRage.Animation.Client.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Animation"><HintPath>$(Game2)/VRage.Animation.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Audio"><HintPath>$(Game2)/VRage.Audio.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.AutoTest"><HintPath>$(Game2)/VRage.AutoTest.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Client.ContentBuilder"><HintPath>$(Game2)/VRage.Client.ContentBuilder.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Client"><HintPath>$(Game2)/VRage.Client.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Animations"><HintPath>$(Game2)/VRage.ContentPipeline.Animations.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.ArmorBlockModel"><HintPath>$(Game2)/VRage.ContentPipeline.ArmorBlockModel.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.ArmorBlockSide"><HintPath>$(Game2)/VRage.ContentPipeline.ArmorBlockSide.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Audio"><HintPath>$(Game2)/VRage.ContentPipeline.Audio.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Builder.Plugin"><HintPath>$(Game2)/VRage.ContentPipeline.Builder.Plugin.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Builder"><HintPath>$(Game2)/VRage.ContentPipeline.Builder.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Game"><HintPath>$(Game2)/VRage.ContentPipeline.Game.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.ModelVoxels"><HintPath>$(Game2)/VRage.ContentPipeline.ModelVoxels.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Models"><HintPath>$(Game2)/VRage.ContentPipeline.Models.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.ModelsBase"><HintPath>$(Game2)/VRage.ContentPipeline.ModelsBase.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.ModelsValidation"><HintPath>$(Game2)/VRage.ContentPipeline.ModelsValidation.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.PlanetTextures"><HintPath>$(Game2)/VRage.ContentPipeline.PlanetTextures.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Publishing"><HintPath>$(Game2)/VRage.ContentPipeline.Publishing.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Scripting"><HintPath>$(Game2)/VRage.ContentPipeline.Scripting.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.SlugFont"><HintPath>$(Game2)/VRage.ContentPipeline.SlugFont.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.SlugSVG"><HintPath>$(Game2)/VRage.ContentPipeline.SlugSVG.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline.Textures"><HintPath>$(Game2)/VRage.ContentPipeline.Textures.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ContentPipeline"><HintPath>$(Game2)/VRage.ContentPipeline.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Core.Editor"><HintPath>$(Game2)/VRage.Core.Editor.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Core.Game.Editor"><HintPath>$(Game2)/VRage.Core.Game.Editor.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Core.Game"><HintPath>$(Game2)/VRage.Core.Game.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Core"><HintPath>$(Game2)/VRage.Core.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.DCS.Samples"><HintPath>$(Game2)/VRage.DCS.Samples.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.DCS"><HintPath>$(Game2)/VRage.DCS.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.EOS"><HintPath>$(Game2)/VRage.EOS.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Game.Client"><HintPath>$(Game2)/VRage.Game.Client.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Game"><HintPath>$(Game2)/VRage.Game.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Input"><HintPath>$(Game2)/VRage.Input.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Library"><HintPath>$(Game2)/VRage.Library.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Mod.Io"><HintPath>$(Game2)/VRage.Mod.Io.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Multiplayer"><HintPath>$(Game2)/VRage.Multiplayer.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Physics.Client"><HintPath>$(Game2)/VRage.Physics.Client.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Physics"><HintPath>$(Game2)/VRage.Physics.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Platform.Windows"><HintPath>$(Game2)/VRage.Platform.Windows.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Render"><HintPath>$(Game2)/VRage.Render.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Render12"><HintPath>$(Game2)/VRage.Render12.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Scripting"><HintPath>$(Game2)/VRage.Scripting.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.ShaderBuilder"><HintPath>$(Game2)/VRage.ShaderBuilder.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Steam"><HintPath>$(Game2)/VRage.Steam.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.TestLogger"><HintPath>$(Game2)/VRage.TestLogger.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Testing"><HintPath>$(Game2)/VRage.Testing.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.UI.Shared"><HintPath>$(Game2)/VRage.UI.Shared.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.UI.Tests"><HintPath>$(Game2)/VRage.UI.Tests.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.UI"><HintPath>$(Game2)/VRage.UI.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Voxels.Client"><HintPath>$(Game2)/VRage.Voxels.Client.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Voxels.Editor"><HintPath>$(Game2)/VRage.Voxels.Editor.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Voxels"><HintPath>$(Game2)/VRage.Voxels.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Water.Client"><HintPath>$(Game2)/VRage.Water.Client.dll</HintPath><Private>false</Private></Reference>
+      <Reference Include="VRage.Water"><HintPath>$(Game2)/VRage.Water.dll</HintPath><Private>false</Private></Reference>
     </ItemGroup>
 
 </Project>
