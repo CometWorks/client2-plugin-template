@@ -140,10 +140,13 @@ def _rename_project(name: str) -> None:
 
 
 def _get_windows_steam_path() -> str | None:
-    reg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
-    key = winreg.OpenKey(reg, r"SOFTWARE\WOW6432Node\Valve\Steam")
-    (path, _) = winreg.QueryValueEx(key, "InstallPath")
-    return path
+    if sys.platform == "win32":
+        reg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
+        key = winreg.OpenKey(reg, r"SOFTWARE\WOW6432Node\Valve\Steam")
+        (path, _) = winreg.QueryValueEx(key, "InstallPath")
+        return str(path)
+
+    return None
 
 
 def _get_linux_steam_path() -> str | None:
