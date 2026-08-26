@@ -1,3 +1,3 @@
 @echo off
-del /s /f /q ClientPlugin\bin
-del /s /f /q ClientPlugin\obj
+if exist "ClientPlugin\bin" rd /s /q "ClientPlugin\bin"
+if exist "ClientPlugin\obj" rd /s /q "ClientPlugin\obj"

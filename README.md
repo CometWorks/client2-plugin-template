@@ -7,6 +7,10 @@
 - [Pulsar](https://github.com/SpaceGT/Pulsar)
 - [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download)
 
+Both Windows and Linux are supported for developing the plugin. On Linux the game itself
+runs through Proton, launched by Pulsar's native `Modern.bin`, but the plugin builds and
+deploys natively.
+
 ## Create your plugin project
 
 1. Click on **Use this template** (top right corner on GitHub) and follow the wizard to create your repository
@@ -19,9 +23,6 @@
 8. Replace the contents of this file with the description of your plugin
 9. Follow the `TODO` comments in the source file and implement your plugin
 
-If you have installed Pulsar to a non-default location (not `%AppData%\Pulsar`),
-then edit the `Pulsar` entry in `Directory.Build.props` accordingly.
-
 In case of questions, please feel free to ask the SE2 plugin developer community on the
 [Pulsar](https://discord.gg/z8ZczP2YZY) Discord server via their relevant text channels. 
 They also have dedicated channels for plugin ideas, should you look for a new one.
@@ -29,6 +30,37 @@ They also have dedicated channels for plugin ideas, should you look for a new on
 _Good luck!_
 
 ## Remarks
+
+### Plugin version
+
+The plugin version lives in `Version.Build.props`, which **is** committed and imported by
+`Directory.Build.props`. Keeping the version separate from the local path overrides means it
+is shared by all contributors and stays under version control. Bump the version there.
+
+### Folder path overrides
+
+`Directory.Build.props` **is** committed and declares the overridable folder paths with empty
+defaults:
+
+- `Game2` &mdash; the folder containing `SpaceEngineers2.exe`
+- `Pulsar` &mdash; the folder containing Pulsar's data
+
+It optionally imports `Directory.Build.props.user` from the repository root, which is **not
+committed** (matched by `*.user` in `.gitignore`), so each contributor keeps their own local
+paths there.
+
+To override a path manually, copy the first `PropertyGroup` of `Directory.Build.props` into
+`Directory.Build.props.user`, wrapped into a top-level `<Project>` element, and fill in your
+paths. `setup.py` writes that file for you with the auto-detected install location, creating
+it if needed and keeping any other overrides already in it.
+
+Leaving a path empty (or having no `Directory.Build.props.user` at all) falls back to the
+platform-specific auto-detection in `ClientPlugin.csproj`, which looks for the Steam install
+of the game (registry on Windows, the usual `~/.steam`, `~/.local/share/Steam` and Flatpak
+locations on Linux) and for Pulsar under `%AppData%\Pulsar` or `~/.config/Pulsar`.
+
+A pre-build step verifies that `Game2` points at an existing folder, so a wrong or missing
+path fails the build with a clear message instead of a wall of unresolved references.
 
 ### Debugging
 
@@ -40,10 +72,11 @@ _Good luck!_
 
 ### How to use a development folder to build the sources by Pulsar
 
-- Start the game with the `Modern.exe` Pulsar executable with the `-sources` command line option.
+- Start the game with the `Modern` Pulsar executable (`Modern.exe` on Windows, `Modern.bin` on Linux)
+  with the `-sources` command line option.
 - Click on the **Sources** button in Pulsar's dialog, then set up a development folder for your plugin.
 - Make sure to fill in the PluginHub registration XML (`ClientPluginTemplate.xml` in this repo) and load that as well.
-- Select `Debug` mode and run `Modern.exe`, then attach the debugger. That should allow debugging your plugin.
+- Select `Debug` mode and run `Modern`, then attach the debugger. That should allow debugging your plugin.
 - Select `Release` mode to test exactly how Pulsar will build and run your plugin on the player's machine.
 - The registered development folder shows up as a plugin you can select in the plugin list and save into a profile.
 
