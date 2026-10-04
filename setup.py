@@ -17,14 +17,12 @@ if sys.platform == "win32":
 
 DRY_RUN = False
 
-TEMPLATE_NAME = 'ClientPluginTemplate'
+TEMPLATE_NAME = "ClientPluginTemplate"
 
 PT_PROJECT_NAME = r"^([A-Z][a-z_0-9]+)+$"
 RX_PROJECT_NAME = re.compile(PT_PROJECT_NAME)
 
-PROJECT_NAMES = (
-    "ClientPlugin",
-)
+PROJECT_NAMES = ("ClientPlugin",)
 
 SE2_APPID = "1133870"
 
@@ -106,7 +104,7 @@ def _rename_project(name: str) -> None:
 
     def iter_paths() -> Iterator[Tuple[str, str]]:
         print("Solution:")
-        for filename in (f'{TEMPLATE_NAME}.sln', f'{TEMPLATE_NAME}.xml'):
+        for filename in (f"{TEMPLATE_NAME}.sln", f"{TEMPLATE_NAME}.xml"):
             if os.path.exists(filename):
                 yield filename, filename
 
@@ -144,7 +142,7 @@ def _get_windows_steam_path() -> str | None:
     if sys.platform == "win32":
         reg = winreg.ConnectRegistry(None, winreg.HKEY_LOCAL_MACHINE)
         key = winreg.OpenKey(reg, r"SOFTWARE\WOW6432Node\Valve\Steam")
-        (path, _) = winreg.QueryValueEx(key, "InstallPath")
+        path, _ = winreg.QueryValueEx(key, "InstallPath")
         return str(path)
 
     return None
@@ -312,7 +310,9 @@ def main() -> None:
         else:
             print("Skipping project rename")
 
-    if _input_question("Auto-detect the install location of Space Engineers 2? (Y/N) [Y]: ", True):
+    if _input_question(
+        "Auto-detect the install location of Space Engineers 2? (Y/N) [Y]: ", True
+    ):
         steam_path = _get_steam_path()
         if steam_path is None:
             print("Could not find Steam install location.")
