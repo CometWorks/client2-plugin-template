@@ -25,10 +25,11 @@
     <Target Name="Verify" BeforeTargets="PrepareForBuild">
         <Error Condition="'$(Game2)' == ''" Text="Specify the SpaceEngineers2 Game2 path in Directory.Build.props.user!" />
         <Error Condition="!Exists('$(Game2)')" Text="SpaceEngineers2 Game2 path not found: $(Game2)" />
-        <Error Condition="'$(Pulsar)' == ''" Text="Specify Pulsar's data folder in Directory.Build.props.user!" />
+        <Message Condition="'$(LocalDeploymentDir)' == ''" Text="Pulsar is not set, the plugin will not be deployed." />
     </Target>
 
-    <Target Name="DeployPlugin" AfterTargets="Build">
+    <!-- Deploys only if Pulsar (or LocalDeploymentDir) is set, see Directory.Build.props -->
+    <Target Name="DeployPlugin" AfterTargets="Build" Condition="'$(LocalDeploymentDir)' != ''">
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(LocalDeploymentDir)" Retries="0" />
     </Target>
     
