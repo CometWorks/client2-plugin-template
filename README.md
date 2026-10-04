@@ -18,8 +18,9 @@ deploys natively.
 3. Run `setup.py`, enter the name of your plugin project in `CapitalizedWords` format
 4. Let `setup.py` auto-detect your installation location or fill it in manually
 5. Open the solution in Visual Studio or Rider
-6. Make a test build, the plugin's DLL should be deployed (see the build log for the path)
-7. Test that the empty plugin can be enabled in Pulsar (use the `Modern` executable of Pulsar to run SE2)
+6. Make a test build
+7. Add the repository to Pulsar as a development folder (see below) and test that the empty plugin
+   can be enabled (use the `Modern` executable of Pulsar to run SE2)
 8. Replace the contents of this file with the description of your plugin
 9. Follow the `TODO` comments in the source file and implement your plugin
 
@@ -43,7 +44,8 @@ is shared by all contributors and stays under version control. Bump the version 
 defaults:
 
 - `Game2` &mdash; the folder containing `SpaceEngineers2.exe`
-- `Pulsar` &mdash; the folder containing Pulsar's data
+- `Pulsar` &mdash; the Pulsar folder the plugin is deployed into after each build, empty by default
+  (see [Deployment](#deployment))
 
 It optionally imports `Directory.Build.props.user` from the repository root, which is **not
 committed** (matched by `*.user` in `.gitignore`), so each contributor keeps their own local
@@ -54,14 +56,26 @@ To override a path manually, copy the first `PropertyGroup` of `Directory.Build.
 paths. `setup.py` writes that file for you with the auto-detected install location, creating
 it if needed and keeping any other overrides already in it.
 
-Leaving a path empty (or having no `Directory.Build.props.user` at all) falls back to the
-platform defaults declared after that import: the Steam install of the game (from the
-registry on Windows, under `~/.steam/steam` on Linux) and Pulsar under `%AppData%\Pulsar`
-or `$XDG_CONFIG_HOME`/`~/.config/Pulsar`. If your Steam library lives elsewhere, run
-`setup.py` or set the path yourself; the defaults are not searched for.
+Leaving `Game2` empty (or having no `Directory.Build.props.user` at all) falls back to the
+platform default declared after that import: the Steam install of the game (from the
+registry on Windows, under `~/.steam/steam` on Linux). If your Steam library lives elsewhere,
+run `setup.py` or set the path yourself; the default is not searched for.
 
-A `Verify` target checks these paths before the build, so a wrong or missing one fails with
+A `Verify` target checks `Game2` before the build, so a wrong or missing one fails with
 a clear message instead of a wall of unresolved references.
+
+### Deployment
+
+Builds don't deploy anything by default. Load your working copy through a Pulsar development
+folder instead (see below), which compiles the plugin from source when the game starts.
+
+A deployed DLL shows up in Pulsar as a separate local plugin. If you later disable the development
+folder, that stale copy can still be enabled and shadow the published version of your plugin.
+
+To deploy anyway, set `Pulsar` in `Directory.Build.props.user`, for example to
+`$(APPDATA)\Pulsar` on Windows or `$(HOME)/.config/Pulsar` on Linux, or pass it to a single build
+with `dotnet build -p:Pulsar=...`. Each successful build then copies the plugin DLL into
+`<Pulsar>/Modern/Local`.
 
 ### Debugging
 

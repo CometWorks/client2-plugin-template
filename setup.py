@@ -35,7 +35,8 @@ USER_PROPS_TEMPLATE = """<Project>
     <!-- Folder containing SpaceEngineers2.exe (empty = auto-detect) -->
     <Game2>{game2}</Game2>
 
-    <!-- Folder containing Pulsar's data (empty = auto-detect) -->
+    <!-- Pulsar folder to deploy the plugin into after each build (empty = no deployment),
+         for example $(APPDATA)\\Pulsar on Windows or $(HOME)/.config/Pulsar on Linux -->
     <Pulsar></Pulsar>
   </PropertyGroup>
 </Project>
