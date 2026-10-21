@@ -3,6 +3,7 @@
 // ReSharper disable CheckNamespace
 // ReSharper disable InconsistentNaming
 
+using System.Collections.Generic;
 using ClientPlugin.Patches;
 using Mono.Cecil;
 
