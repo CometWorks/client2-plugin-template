@@ -8,8 +8,9 @@
 - [.NET 10 SDK](https://dotnet.microsoft.com/en-us/download)
 
 Both Windows and Linux are supported for developing the plugin. On Linux the game itself
-runs through Proton, launched by Pulsar's native `Modern.bin`, but the plugin builds and
-deploys natively.
+runs natively, launched by Pulsar's `Modern.bin` with the
+[LinuxCompat](https://github.com/CometWorks/linux-compat2) plugin, and the plugin builds and
+deploys natively too.
 
 ## Create your plugin project
 
