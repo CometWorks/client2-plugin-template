@@ -21,6 +21,9 @@ public class Config : INotifyPropertyChanged
 {
     #region Options
 
+    // An option added later can default differently on a new deployment than on an existing one:
+    // private bool newOption = ConfigStorage.IsNewDeployment;
+
     private bool enabled = true;
     private bool toggle = true;
     private int integer = 2;
